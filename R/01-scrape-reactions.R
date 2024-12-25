@@ -64,7 +64,8 @@ df_reactions_comments_results <- df_reactions_comments |>
 write_csv(df_reactions_comments_results, file.path("data", "post-reactions.csv"))
 
 # Add reactions and comments stats to post dataset
-df_posts_stats <- df_posts |> 
+df_post_stats <- df_posts |> 
   inner_join(df_reactions_comments_results, 
-             by = join_by(ShareLink == post_url))
-write_csv(df_posts_stats, file.path("data", "post-stats.csv"))
+             by = join_by(ShareLink == post_url)) |> 
+  janitor::clean_names()
+write_csv(df_post_stats, file.path("data", "post-stats.csv"))
