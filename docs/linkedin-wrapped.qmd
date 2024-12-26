@@ -143,7 +143,6 @@ df_first_week_of_month <- df_calendar_plot |>
 first_week_of_month <- df_first_week_of_month$first_week_of_month
 names(first_week_of_month) <- df_first_week_of_month$week_start_month
 
-
 ```
 
 ```{r post-calender, fig.align='center', fig.width=6, fig.height=3, fig.retina=TRUE, fig.dpi=200}
@@ -246,15 +245,15 @@ medals <- emoji(search_emoji("place_medal"))
 df_post_stats |> 
   slice_max(order_by = reactions, n = 3) |> 
   select(date, share_commentary, reactions, comments) |> 
-   mutate(
-    share_commentary = str_replace_all(share_commentary, "\"", " "),
-    share_commentary_short = str_sub(share_commentary, 1, share_commentary_short_size),
-    share_commentary_short = ifelse(
-      str_length(share_commentary < share_commentary_short_size),
-      paste0(share_commentary_short, "..."),
-      share_commentary),
-    rank = row_number(),
-    medal = medals[rank]
+  mutate(
+  share_commentary = str_replace_all(share_commentary, "\"", " "),
+  share_commentary_short = str_sub(share_commentary, 1, share_commentary_short_size),
+  share_commentary_short = ifelse(
+    str_length(share_commentary < share_commentary_short_size),
+    paste0(share_commentary_short, "..."),
+    share_commentary),
+  rank = row_number(),
+  medal = medals[rank]
   ) |> 
  ggplot() +
   geom_textbox(
@@ -272,5 +271,54 @@ df_post_stats |>
     strip.text = element_text(size = 24, face = "bold", color = "white", vjust = 1)
   )
 ```
+
+
+\newpage
+
+\begin{center}
+\fontsize{24}{6}\selectfont Your top posts in 2024 per month
+\end{center}
+\vspace{-10mm}
+\begin{center}
+\fontsize{12}{6}\selectfont (by number of reactions)
+\end{center}
+
+```{r top-posts-per-month, fig.width=7, fig.height=5}
+# Top posts per month (based on reactions)
+share_commentary_short_size <- 110
+
+df_post_stats |> 
+  group_by(month) |> 
+  slice_max(order_by = reactions, n = 1, with_ties = FALSE) |> 
+  ungroup() |> 
+  mutate(
+    share_commentary = str_replace_all(share_commentary, "\"", " "),
+    share_commentary_short = str_sub(share_commentary, 1, share_commentary_short_size),
+    share_commentary_short = ifelse(
+      str_length(share_commentary < share_commentary_short_size),
+      paste0(share_commentary_short, "..."),
+      share_commentary),
+    rank = row_number(),
+    medal = medals[rank]
+  ) |> 
+ ggplot() +
+  geom_textbox(
+    aes(0, 1.1, label = share_commentary_short),
+    width = 0.9, size = 2.5, fill = NA, color = "white", box.color = NA, vjust = 1
+  ) +
+  geom_textbox(
+    aes(0, 0, label = sprintf("**%d** reactions | **%d** comments", reactions, comments)),
+    width = 0.9, size = 2, fill = NA, color = "white", box.color = NA, vjust = 0
+  ) +
+  coord_cartesian(expand = FALSE, ylim = c(0, 1.1)) +
+  facet_wrap(vars(month), ncol = 2, strip.position = "left") +
+  theme_void() +
+  theme(
+    strip.text = element_text(size = 16, face = "bold", color = "white", vjust = 1)
+  )
+
+
+```
+
 
 
