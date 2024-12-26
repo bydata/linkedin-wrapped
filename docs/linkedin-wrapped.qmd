@@ -221,7 +221,7 @@ bgcolor_latex <- sprintf("{HTML}{%s}", str_remove(bgcolor, "#"))
 \vspace{-20mm}
 
 \newcommand{\transparentcard}[2]{
-  \begin{tcolorbox}[colback=bgcolor, coltext=white, colframe=cardframecolor, 
+  \begin{tcolorbox}[colback=cardbgcolor, coltext=white, colframe=cardframecolor, 
   width=0.3\textwidth, height=3.5cm, valign=center, halign=center, boxrule=1pt]
     \Huge\textbf{#1} \\ % Large number
     \vspace{0.5cm}
