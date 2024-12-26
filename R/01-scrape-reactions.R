@@ -1,16 +1,24 @@
 library(tidyverse)
 library(rvest)
+library(here)
+
+# If sourced from the Quarto doc, from_date will already be set
+if (!exists("from_date")) {
+  from_date <- as_date("2024-01-01")
+  to_date <- as_date("2024-12-31")
+}
 
 # Read post URLs
-from_date <- as_date("2024-01-01")
-
 paths_complete_export_zip <- list.files("data", pattern = "Complete_LinkedInDataExport_.+\\.zip")
-path_complete_export <- file.path("data", "complete_data")
-unzip(file.path("data", paths_complete_export_zip[1]), exdir = path_complete_export, 
+path_complete_export <- here("data", "complete_data")
+unzip(here("data", paths_complete_export_zip[1]), exdir = path_complete_export, 
       files = c("Shares.csv"))
 
-df_posts <- read_csv(file.path(path_complete_export, "Shares.csv"))
-urls <- df_posts$ShareLink[df_posts$Date >= from_date]
+df_posts <- read_csv(here(path_complete_export, "Shares.csv"))
+# Exclude posts without text since they typically are reposts
+#TODO
+df_posts <- df_posts[!is.na(df_posts$ShareCommentary), ]
+urls <- df_posts$ShareLink[df_posts$Date >= from_date & df_posts$Date <= to_date]
 
 
 # Extract reactions count from page
@@ -61,11 +69,11 @@ df_reactions_comments_results <- df_reactions_comments |>
   mutate(
     across(c(reactions, comments), function(x) replace_na(x, 0))
   )
-write_csv(df_reactions_comments_results, file.path("data", "post-reactions.csv"))
+write_csv(df_reactions_comments_results, here("data", "post-reactions.csv"))
 
 # Add reactions and comments stats to post dataset
 df_post_stats <- df_posts |> 
   inner_join(df_reactions_comments_results, 
              by = join_by(ShareLink == post_url)) |> 
   janitor::clean_names()
-write_csv(df_post_stats, file.path("data", "post-stats.csv"))
+write_csv(df_post_stats, here("data", "post-stats.csv"))

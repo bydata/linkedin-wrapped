@@ -1,6 +1,8 @@
 ---
 params:
   username: Ansgar Wolsing
+  scrape_reactions: false
+  year: 2024
 execute:
   echo: false
   message: false
@@ -24,12 +26,11 @@ header-includes:
   - \usepackage{tcolorbox}
   - \usepackage{multicol} 
   - \setlength{\columnsep}{1cm}
-  
-editor: visual
+editor: source
 ---
 
 \begin{center}
-\fontsize{48}{6}\selectfont\textbf{2024}
+\fontsize{48}{6}\selectfont\textbf{`{r} params$year`}
 \end{center}
 \begin{center}
 \fontsize{32}{6}\selectfont LinkedIn Wrapped
@@ -40,6 +41,24 @@ editor: visual
 library(tidyverse)
 library(magick)
 library(ggtext)
+```
+
+```{r scrape-reactions}
+#' Scrape reactions if parameter is set to true
+#' Calls 01-scrape-reactions.R and passes the start date from the parameter input
+#' as an argument
+
+from_date <- as_date(paste(params$year, "01", "01", sep = "-"))
+to_date <- as_date(paste(params$year, "12", "31", sep = "-"))
+  
+if (params$scrape_reactions) {
+  source(file.path("..", "R", "01-scrape-reactions.R"))
+}
+
+```
+
+
+```{r custom-theme}
 
 bgcolor <- "#11052F"
 fill_gradient_yellow <- grid::linearGradient(c("#FAC123", "#FFD96E"), group = FALSE)
@@ -124,7 +143,7 @@ username <- params$username
 
 \vspace{-15mm}
 
-```{r load-post-stats, cache=TRUE}
+```{r load-post-stats, cache=FALSE}
 #' Run R/01-scrape-reactions.R first to create the post stats dataset
 
 df_post_stats <- read_csv(file.path("..", "data", "post-stats.csv"))
@@ -149,7 +168,7 @@ df_calendar_plot <- df_post_stats |>
     total_engagements = total_reactions + total_comments
     ) |> 
   complete(
-    date = seq(as_date("2024-01-01"), as_date("2024-12-31"), "1 day"),
+    date = seq(from_date, to_date, "1 day"),
     fill = list(n_posts = 0)) |> 
   mutate(
     week = isoweek(date),
@@ -253,7 +272,7 @@ bgcolor_latex <- sprintf("{HTML}{%s}", str_remove(bgcolor, "#"))
 \newpage
 
 \begin{center}
-\fontsize{24}{6}\selectfont\textbf{Your top posts in 2024}
+\fontsize{24}{6}\selectfont\textbf{Your top posts in `{r} params$year`}
 \end{center}
 \vspace{-8mm}
 \begin{center}
@@ -323,6 +342,10 @@ df_post_stats |>
     str_length(share_commentary < share_commentary_short_size),
     paste0(share_commentary_short, "..."),
     share_commentary),
+  # Replace unicode special characters at the beginning
+  #TODO
+  share_commentary_short = str_replace_all(share_commentary_short, "[^\u1F600-\u1F64F]", " "),
+  share_commentary_short = str_squish(share_commentary_short),
   rank = row_number(),
   medal = medals[rank]
   ) |> 
@@ -354,16 +377,16 @@ df_post_stats |>
 \newpage
 
 \begin{center}
-\fontsize{24}{6}\selectfont\textbf{Your top posts in 2024 per month}
+\fontsize{24}{6}\selectfont\textbf{Your top posts in `{r} params$year` per month}
 \end{center}
 \vspace{-10mm}
 \begin{center}
 \fontsize{12}{6}\selectfont by number of reactions
 \end{center}
 
-```{r top-posts-per-month, fig.width=7, fig.height=6, fig.align='center'}
+```{r top-posts-per-month, fig.width=7.5, fig.height=6, fig.align='center'}
 # Top posts per month (based on reactions)
-share_commentary_short_size <- 110
+share_commentary_short_size <- 200
 
 df_post_stats |> 
   group_by(month) |> 
@@ -376,10 +399,14 @@ df_post_stats |>
       str_length(share_commentary < share_commentary_short_size),
       paste0(share_commentary_short, "..."),
       share_commentary),
+    # Replace unicode special characters at the beginning
+    #TODO
+    share_commentary_short = str_replace_all(share_commentary_short, "[^\u1F600-\u1F64F]", " "),
+    share_commentary_short = str_squish(share_commentary_short),
     rank = row_number(),
     medal = medals[rank]
-  ) |> 
- ggplot() +
+  ) |>
+  ggplot() +
   geom_textbox(
     aes(0, 1.1, label = share_commentary_short),
     width = 0.9, size = 2.5, fill = NA, color = "white", box.color = NA, vjust = 1,
@@ -508,7 +535,7 @@ df_post_stats |>
   summarize(n_posts = n()) |> 
   ggplot(aes(hour, n_posts)) +
   geom_col(fill = fill_gradient_yellow, width = default_bar_width) +
-  scale_x_continuous(breaks = seq(0, 24, 2)) +
+  scale_x_continuous(breaks = seq(0, 23, 2)) +
   coord_cartesian(xlim = c(0, 23)) +
   labs(
     title = "Number of posts by hour of day",
@@ -528,7 +555,7 @@ df_post_stats |>
   summarize(avg_engagements = mean(reactions) + mean(comments)) |> 
   ggplot(aes(hour, avg_engagements)) +
   geom_col(fill = fill_gradient_pink, width = default_bar_width) +
-  scale_x_continuous(breaks = seq(0, 24, 2)) +
+  scale_x_continuous(breaks = seq(0, 23, 2)) +
   coord_cartesian(xlim = c(0, 23)) +
   labs(
     title = "Average engagements per post by hour of posting",
