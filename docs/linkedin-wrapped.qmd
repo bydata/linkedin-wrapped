@@ -248,7 +248,7 @@ bgcolor_latex <- sprintf("{HTML}{%s}", str_remove(bgcolor, "#"))
 \fontsize{12}{6}\selectfont (by number of reactions)
 \end{center}
 
-```{r top3-posts}
+```{r top3-posts, fig.align='center'}
 # Top posts by number of reactions
 
 # Limit the number of characters to be displayed
@@ -305,7 +305,7 @@ df_post_stats |>
 \fontsize{12}{6}\selectfont (by number of reactions)
 \end{center}
 
-```{r top-posts-per-month, fig.width=7, fig.height=6}
+```{r top-posts-per-month, fig.width=7, fig.height=6, fig.align='center'}
 # Top posts per month (based on reactions)
 share_commentary_short_size <- 110
 
@@ -427,10 +427,54 @@ df_post_stats |>
   summarize(avg_engagements = mean(reactions) + mean(comments)) |> 
   ggplot(aes(hour, avg_engagements)) +
   geom_col(fill = "#DD00E5") +
+  scale_x_continuous(breaks = seq(0, 24, 2)) +
   coord_cartesian(xlim = c(0, 23)) +
   labs(
     title = "Average engagements per post by hour of posting",
     subtitle = "Reactions and comments, time in UTC",
+    x = NULL, y = NULL
+  ) +
+  custom_theme()
+
+```
+
+
+\newpage
+
+\begin{center}
+\fontsize{24}{6}\selectfont\textbf{Your posting days}
+\end{center}
+
+\vspace{10mm}
+
+
+```{r posts-per-day-of-week, fig.height=2.5, fig.align='center'}
+df_post_stats |> 
+  mutate(wday = wday(date, label = TRUE, week_start = 1)) |> 
+  group_by(wday) |> 
+  summarize(n_posts = n()) |> 
+  ggplot(aes(wday, n_posts)) +
+  geom_col(fill = "#FFD96E") +
+  labs(
+    title = "Number of posts by day of week",
+    x = NULL, y = NULL
+  ) +
+  custom_theme()  
+
+```
+
+\vspace{4mm}
+
+```{r posts-engagements-per-day-of-week, fig.height=2.5, fig.align='center'}
+df_post_stats |> 
+   mutate(wday = wday(date, label = TRUE, week_start = 1)) |> 
+  group_by(wday) |> 
+  summarize(avg_engagements = mean(reactions) + mean(comments)) |> 
+  ggplot(aes(wday, avg_engagements)) +
+  geom_col(fill = "#DD00E5") +
+  labs(
+    title = "Average engagements per post by day of week of posting",
+    subtitle = "Reactions and comments",
     x = NULL, y = NULL
   ) +
   custom_theme()
