@@ -191,7 +191,7 @@ names(first_week_of_month) <- df_first_week_of_month$week_start_month
 
 ```
 
-```{r post-calender-posts, fig.align='center', fig.width=6, fig.height=2.5, fig.retina=TRUE, fig.dpi=200}
+```{r post-calender-posts, fig.align='center', fig.width=6, fig.height=2.5, fig.retina=TRUE, fig.dpi=300}
 
 df_calendar_plot |> 
   ggplot(aes(week, weekday_num)) +
@@ -215,13 +215,13 @@ df_calendar_plot |>
     panel.grid = element_blank(),
     text = element_text(color = "white"),
     axis.text = element_text(color = "white"),
-    axis.text.x = element_text(size = 7),
-    axis.text.y = element_text(hjust = 0, size = 5),
+    axis.text.x = element_text(size = 9),
+    axis.text.y = element_text(hjust = 0, size = 7),
     axis.title = element_blank(),
     legend.position = "bottom",
     legend.justification = "right",
-    legend.title = element_text(size = 7),
-    legend.text = element_text(size = 7),
+    legend.title = element_text(size = 9),
+    legend.text = element_text(size = 9),
     legend.key.width = unit(2, "mm"),
     legend.key.height = unit(2, "mm")
   )
@@ -281,7 +281,7 @@ bgcolor_latex <- sprintf("{HTML}{%s}", str_remove(bgcolor, "#"))
 
 \vspace{-10mm}
 
-```{r post-calender-post-engagement, fig.align='center', fig.width=6, fig.height=2.5, fig.retina=TRUE, fig.dpi=200}
+```{r post-calender-post-engagement, fig.align='center', fig.width=6, fig.height=2.5, fig.retina=TRUE, fig.dpi=300}
 
 df_calendar_plot |> 
   mutate(total_reactions = replace_na(total_reactions, 0)) |> 
@@ -308,13 +308,13 @@ df_calendar_plot |>
     panel.grid = element_blank(),
     text = element_text(color = "white"),
     axis.text = element_text(color = "white"),
-    axis.text.x = element_text(size = 7),
-    axis.text.y = element_text(hjust = 0, size = 5),
+    axis.text.x = element_text(size = 9),
+    axis.text.y = element_text(hjust = 0, size = 7),
     axis.title = element_blank(),
     legend.position = "bottom",
     legend.justification = "right",
-    legend.title = element_text(size = 7),
-    legend.text = element_text(size = 7),
+    legend.title = element_text(size = 9),
+    legend.text = element_text(size = 9),
     legend.key.width = unit(8, "mm"),
     legend.key.height = unit(2, "mm")
   )
@@ -327,7 +327,7 @@ df_calendar_plot |>
 # Top posts by number of reactions
 
 # Limit the number of characters to be displayed
-share_commentary_short_size <- 350
+share_commentary_short_size <- 320
 
 library(emojifont)
 medals <- emoji(search_emoji("place_medal"))
@@ -338,26 +338,25 @@ df_post_stats |>
   mutate(
   share_commentary = str_replace_all(share_commentary, "\"", " "),
   share_commentary_short = str_sub(share_commentary, 1, share_commentary_short_size),
-  share_commentary_short = ifelse(
-    str_length(share_commentary < share_commentary_short_size),
-    paste0(share_commentary_short, "..."),
-    share_commentary),
   # Replace unicode special characters at the beginning
   #TODO
   share_commentary_short = str_replace_all(share_commentary_short, "[^\u1F600-\u1F64F]", " "),
   share_commentary_short = str_squish(share_commentary_short),
-  rank = row_number(),
-  medal = medals[rank]
+  share_commentary_short = ifelse(
+    str_length(share_commentary < share_commentary_short_size),
+    paste0(share_commentary_short, "..."),
+    share_commentary),
+  rank = row_number()
   ) |> 
  ggplot() +
   geom_textbox(
     aes(0, 1, label = share_commentary_short),
-    width = 0.9, size = 2.5, fill = NA, color = "white", box.color = NA, vjust = 1,,
+    width = 0.9, size = 3.25, fill = NA, color = "white", box.color = NA, vjust = 1,,
     box.padding = unit(0, "mm")
   ) +
   geom_textbox(
     aes(0, 0.1, label = sprintf("**%d** reactions | **%d** comments", reactions, comments)),
-    width = 0.9, size = 2, fill = NA, color = "white", box.color = NA, vjust = 0,
+    width = 0.9, size = 2.25, fill = NA, color = "white", box.color = NA, vjust = 0,
     box.padding = unit(0, "mm")
   ) +
   coord_cartesian(expand = FALSE, ylim = c(0, 1.1)) +
@@ -386,7 +385,7 @@ df_post_stats |>
 
 ```{r top-posts-per-month, fig.width=7.5, fig.height=6, fig.align='center'}
 # Top posts per month (based on reactions)
-share_commentary_short_size <- 200
+share_commentary_short_size <- 180
 
 df_post_stats |> 
   group_by(month) |> 
@@ -395,27 +394,26 @@ df_post_stats |>
   mutate(
     share_commentary = str_replace_all(share_commentary, "\"", " "),
     share_commentary_short = str_sub(share_commentary, 1, share_commentary_short_size),
-    share_commentary_short = ifelse(
-      str_length(share_commentary < share_commentary_short_size),
-      paste0(share_commentary_short, "..."),
-      share_commentary),
     # Replace unicode special characters at the beginning
     #TODO
     share_commentary_short = str_replace_all(share_commentary_short, "[^\u1F600-\u1F64F]", " "),
     share_commentary_short = str_squish(share_commentary_short),
-    rank = row_number(),
-    medal = medals[rank]
+    share_commentary_short = ifelse(
+      str_length(share_commentary < share_commentary_short_size),
+      paste0(share_commentary_short, "..."),
+      share_commentary),
+    rank = row_number()
   ) |>
   ggplot() +
   geom_textbox(
-    aes(0, 1.1, label = share_commentary_short),
-    width = 0.9, size = 2.5, fill = NA, color = "white", box.color = NA, vjust = 1,
+    aes(0, 1.2, label = share_commentary_short),
+    width = 0.9, size = 3.25, fill = NA, color = "white", box.color = NA, vjust = 1,
     box.padding = unit(1, "mm")
   ) +
   geom_textbox(
     aes(0, 0, label = sprintf("**%d** reactions | **%d** comments", reactions, comments)),
-    width = 0.9, size = 2, fill = NA, color = "white", box.color = NA, vjust = 0,
-    box.padding = unit(2, "mm")
+    width = 0.9, size = 2.25, fill = NA, color = "white", box.color = NA, vjust = 0,
+    box.padding = unit(1, "mm")
   ) +
   coord_cartesian(expand = FALSE, ylim = c(-0.1, 1.2)) +
   facet_wrap(vars(month), ncol = 2, strip.position = "left") +
