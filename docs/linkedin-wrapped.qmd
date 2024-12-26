@@ -48,6 +48,7 @@ custom_theme <- function(...) {
   theme_minimal() +
   theme(
     plot.background = element_rect(color = "#38216B", fill = "#18083E"),
+    plot.margin = margin(t = 8, l = 8, r = 8, b = 8),
     panel.grid = element_blank(),
     panel.grid.major.y = element_line(color = "#38216B"),
     text = element_text(color = "white"),
@@ -355,10 +356,55 @@ df_post_stats |>
 \fontsize{24}{6}\selectfont\textbf{Your consistency stats}
 \end{center}
 
-\vspace{10mm}
+
+```{r post-streaks}
+# Longest daily streak
+longest_streak_length_days <- df_post_stats |> 
+  distinct(date) |> 
+  arrange(date) |> 
+  mutate(
+    diff_last_post = difftime(date, lag(date, 1, default = first(date)), units = "days"),
+    diff_last_post = as.integer(diff_last_post),
+    new_streak = ifelse(diff_last_post > 1, 1, 0),
+    streak_id = cumsum(new_streak)
+  ) |> 
+  group_by(streak_id) |> 
+  summarize(
+    streak_length = n(),
+    streak_start_date = min(date)) |> 
+  slice_max(order_by = streak_length, n = 1, with_ties = FALSE) |> 
+  pull(streak_length)
+
+# Longest weekly streak
+longest_streak_length_weeks <- df_post_stats |> 
+  mutate(week = floor_date(date, "1 week", week_start = 1)) |> 
+  distinct(week) |> 
+  arrange(week) |> 
+  mutate(
+    diff_last_post = difftime(week, lag(week, 1, default = NA), units = "weeks"),
+    diff_last_post = as.integer(diff_last_post),
+    new_streak = ifelse(diff_last_post > 1, 1, 0),
+    streak_id = cumsum(new_streak)
+  ) |> 
+  group_by(streak_id) |> 
+  summarize(
+    streak_length = n(),
+    streak_start_date = min(week)) |> 
+  slice_max(order_by = streak_length, n = 1, with_ties = FALSE) |> 
+  pull(streak_length)
+
+```
 
 
-```{r posts-per-month, fig.height=2.5, fig.align='center'}
+\begin{center}
+\begin{tabular}{cc}
+  \transparentcard{`{r} longest_streak_length_days`}{Longest Daily Streak} &
+  \transparentcard{`{r} longest_streak_length_weeks`}{Longest Weekly Streak} \\
+\end{tabular}
+\end{center}
+
+
+```{r posts-per-month, fig.height=2.25, fig.align='center'}
 df_post_stats |> 
   group_by(month) |> 
   summarize(n_posts = n()) |> 
@@ -372,9 +418,9 @@ df_post_stats |>
 
 ```
 
-\vspace{4mm}
+\vspace{-4mm}
 
-```{r posts-engagements-per-month, fig.height=2.5, fig.align='center'}
+```{r posts-engagements-per-month, fig.height=2.25, fig.align='center'}
 df_post_stats |> 
   group_by(month) |> 
   summarize(n_engagements = sum(reactions) + sum(comments)) |> 
