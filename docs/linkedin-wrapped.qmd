@@ -132,11 +132,16 @@ df_post_stats <- df_post_stats |>
 
 # Calendar of post dates
 df_calendar_plot <- df_post_stats |> 
-  transmute(
+  mutate(
     date = as_date(date)
   ) |> 
   group_by(date) |> 
-  summarize(n_posts = n()) |> 
+  summarize(
+    n_posts = n(),
+    total_reactions = sum(reactions),
+    total_comments = sum(comments),
+    total_engagements = total_reactions + total_comments
+    ) |> 
   complete(
     date = seq(as_date("2024-01-01"), as_date("2024-12-31"), "1 day"),
     fill = list(n_posts = 0)) |> 
@@ -161,7 +166,7 @@ names(first_week_of_month) <- df_first_week_of_month$week_start_month
 
 ```
 
-```{r post-calender, fig.align='center', fig.width=6, fig.height=3, fig.retina=TRUE, fig.dpi=200}
+```{r post-calender-posts, fig.align='center', fig.width=6, fig.height=2.5, fig.retina=TRUE, fig.dpi=200}
 
 df_calendar_plot |> 
   ggplot(aes(week, weekday_num)) +
@@ -177,7 +182,7 @@ df_calendar_plot |>
   scale_fill_viridis_c(option = "plasma", na.value = "grey80") +
   coord_fixed() +
   guides(fill = guide_legend(
-    title = "# of posts", 
+    title = "# of reactions by posting date", 
     override.aes = list(shape = 22, color = "white", size = 1))) +
   theme_minimal() +
   theme(
@@ -244,10 +249,54 @@ bgcolor_latex <- sprintf("{HTML}{%s}", str_remove(bgcolor, "#"))
 \begin{center}
 \fontsize{24}{6}\selectfont\textbf{Your top posts in 2024}
 \end{center}
-\vspace{-10mm}
+\vspace{-8mm}
 \begin{center}
-\fontsize{12}{6}\selectfont (by number of reactions)
+\fontsize{12}{6}\selectfont by number of reactions
 \end{center}
+
+\vspace{-10mm}
+
+```{r post-calender-post-engagement, fig.align='center', fig.width=6, fig.height=2.5, fig.retina=TRUE, fig.dpi=200}
+
+df_calendar_plot |> 
+  mutate(total_reactions = replace_na(total_reactions, 0)) |> 
+  ggplot(aes(week, weekday_num)) +
+  geom_tile(
+    aes(fill = total_reactions),
+    height = 0.8, width = 0.8) +
+  scale_x_continuous(
+    breaks = first_week_of_month,
+    expand = c(0, 0)
+  ) +
+  scale_y_reverse(
+    expand = c(0, 0), breaks = 1:7, labels = unique(df_calendar_plot$weekday)) +
+  scale_fill_viridis_c(
+    option = "plasma", na.value = "grey80", transform = "pseudo_log",
+    breaks = c(0, 1, 3, 5, 10, 30, 100, 300, 1000)) +
+  coord_fixed() +
+  guides(fill = guide_colorbar(
+    title = "# of reactions and comments (log)", 
+    override.aes = list(shape = 22, color = "white", size = 1))) +
+  theme_minimal() +
+  theme(
+    plot.background = element_rect(color = "transparent", fill = "transparent"),
+    panel.grid = element_blank(),
+    text = element_text(color = "white"),
+    axis.text = element_text(color = "white"),
+    axis.text.x = element_text(size = 7),
+    axis.text.y = element_text(hjust = 0, size = 5),
+    axis.title = element_blank(),
+    legend.position = "bottom",
+    legend.justification = "right",
+    legend.title = element_text(size = 7),
+    legend.text = element_text(size = 7),
+    legend.key.width = unit(8, "mm"),
+    legend.key.height = unit(2, "mm")
+  )
+
+```
+
+\vspace{-10mm}
 
 ```{r top3-posts, fig.align='center'}
 # Top posts by number of reactions
@@ -303,7 +352,7 @@ df_post_stats |>
 \end{center}
 \vspace{-10mm}
 \begin{center}
-\fontsize{12}{6}\selectfont (by number of reactions)
+\fontsize{12}{6}\selectfont by number of reactions
 \end{center}
 
 ```{r top-posts-per-month, fig.width=7, fig.height=6, fig.align='center'}
