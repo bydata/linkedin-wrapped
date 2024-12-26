@@ -11,7 +11,7 @@ format:
     geometry: 
       - paperwidth=8in
       - paperheight=8in
-      - top=25mm
+      - top=20mm
       - left=20mm
       - right=20mm
       - bottom=5mm
@@ -29,10 +29,10 @@ editor: visual
 ---
 
 \begin{center}
-\fontsize{32}{6}\selectfont\textbf{2024}
+\fontsize{48}{6}\selectfont\textbf{2024}
 \end{center}
 \begin{center}
-\fontsize{24}{6}\selectfont LinkedIn Wrapped
+\fontsize{32}{6}\selectfont LinkedIn Wrapped
 \end{center}
 
 
@@ -99,7 +99,7 @@ dev.off()
 # Apply the mask
 img_circular <- image_composite(img, mask, operator = "copyopacity") |> 
   image_background(bgcolor) |> 
-  image_resize("500x500")
+  image_resize("600x600")
 image_write(img_circular, "profile-pic-circle.png")
 
 ```
@@ -115,7 +115,7 @@ username <- params$username
 `{r} username`
 \end{center}
 
-\vspace{-15mm}
+\vspace{-25mm}
 
 ```{r load-post-stats, cache=TRUE}
 #' Run R/01-scrape-reactions.R first to create the post stats dataset
@@ -218,7 +218,7 @@ bgcolor_latex <- sprintf("{HTML}{%s}", str_remove(bgcolor, "#"))
 ```
 
 
-\vspace{-15mm}
+\vspace{-20mm}
 
 \newcommand{\transparentcard}[2]{
   \begin{tcolorbox}[colback=bgcolor, coltext=white, colframe=cardframecolor, 
