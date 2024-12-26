@@ -7,6 +7,7 @@ execute:
   warning: false
 format: 
   pdf:
+    latex-engine: xelatex
     geometry: 
       - paperwidth=8in
       - paperheight=8in
@@ -23,6 +24,7 @@ header-includes:
   - \usepackage{tcolorbox}
   - \usepackage{multicol} 
   - \setlength{\columnsep}{1cm}
+  
 editor: visual
 ---
 
@@ -37,12 +39,13 @@ editor: visual
 ```{r setup}
 library(tidyverse)
 library(magick)
+library(ggtext)
 
 bgcolor <- "#11052F"
 
 ```
 
-```{r profile-pic-prep, include=FALSE}
+```{r profile-pic-prep, include=FALSE, cache=TRUE}
 # Crop the image with {magick} and insert it as PNG
 
 paths_complete_export_zip <- list.files(file.path("..", "data"), pattern = "Complete_LinkedInDataExport_.+\\.zip")
@@ -99,7 +102,7 @@ username <- params$username
 
 \vspace{-15mm}
 
-```{r}
+```{r load-post-stats, cache=TRUE}
 #' Run R/01-scrape-reactions.R first to create the post stats dataset
 
 df_post_stats <- read_csv(file.path("..", "data", "post-stats.csv"))
@@ -111,9 +114,6 @@ df_post_stats <- df_post_stats |>
   ) |> 
   select(datetime, date, everything())
 
-```
-
-```{r, fig.align='center', fig.width=6, fig.height=3, fig.retina=TRUE, fig.dpi=200}
 # Calendar of post dates
 df_calendar_plot <- df_post_stats |> 
   transmute(
@@ -142,6 +142,11 @@ df_first_week_of_month <- df_calendar_plot |>
   summarize(first_week_of_month = min(week))
 first_week_of_month <- df_first_week_of_month$first_week_of_month
 names(first_week_of_month) <- df_first_week_of_month$week_start_month
+
+
+```
+
+```{r post-calender, fig.align='center', fig.width=6, fig.height=3, fig.retina=TRUE, fig.dpi=200}
 
 df_calendar_plot |> 
   ggplot(aes(week, weekday_num)) +
@@ -179,7 +184,6 @@ df_calendar_plot |>
 ```
 
 
-\vspace{-15mm}
 
 ```{r main-post-stats}
 
@@ -200,6 +204,8 @@ bgcolor_latex <- sprintf("{HTML}{%s}", str_remove(bgcolor, "#"))
 ```
 
 
+\vspace{-15mm}
+
 \newcommand{\transparentcard}[2]{
   \begin{tcolorbox}[colback=bgcolor, coltext=white, colframe=cardframecolor, 
   width=0.3\textwidth, height=3.5cm, valign=center, halign=center, boxrule=1pt]
@@ -216,3 +222,55 @@ bgcolor_latex <- sprintf("{HTML}{%s}", str_remove(bgcolor, "#"))
   \transparentcard{`{r} format_number(n_total_comments)`}{Comments} \\
 \end{tabular}
 \end{center}
+
+
+\newpage
+
+\begin{center}
+\fontsize{24}{6}\selectfont Your top posts in 2024
+\end{center}
+\vspace{-10mm}
+\begin{center}
+\fontsize{12}{6}\selectfont (by number of reactions)
+\end{center}
+
+```{r top3-posts}
+# Top posts by number of reactions
+
+# Limit the number of characters to be displayed
+share_commentary_short_size <- 350
+
+library(emojifont)
+medals <- emoji(search_emoji("place_medal"))
+
+df_post_stats |> 
+  slice_max(order_by = reactions, n = 3) |> 
+  select(date, share_commentary, reactions, comments) |> 
+   mutate(
+    share_commentary = str_replace_all(share_commentary, "\"", " "),
+    share_commentary_short = str_sub(share_commentary, 1, share_commentary_short_size),
+    share_commentary_short = ifelse(
+      str_length(share_commentary < share_commentary_short_size),
+      paste0(share_commentary_short, "..."),
+      share_commentary),
+    rank = row_number(),
+    medal = medals[rank]
+  ) |> 
+ ggplot() +
+  geom_textbox(
+    aes(0, 1, label = share_commentary_short),
+    width = 0.9, size = 2.5, fill = NA, color = "white", box.color = NA, vjust = 1
+  ) +
+  geom_textbox(
+    aes(0, 0.1, label = sprintf("**%d** reactions | **%d** comments", reactions, comments)),
+    width = 0.9, size = 2, fill = NA, color = "white", box.color = NA, vjust = 0
+  ) +
+  coord_cartesian(expand = FALSE, ylim = c(0, 1)) +
+  facet_wrap(vars(rank), ncol = 1, strip.position = "left") +
+  theme_void() +
+  theme(
+    strip.text = element_text(size = 24, face = "bold", color = "white", vjust = 1)
+  )
+```
+
+
