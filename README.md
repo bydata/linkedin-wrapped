@@ -14,5 +14,5 @@ Here's how:
 
 ## Requirements
 
-- R
-- Quarto
+- [R](https://cran.r-project.org/)
+- [Quarto](https://quarto.org/)
