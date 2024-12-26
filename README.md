@@ -10,9 +10,6 @@ Here's how:
 3. Once the archive (zip file) is available, download it and store it into the [data](bydata/linkedin-wrapped/tree/main/data) folder. You don't need to extract the archive.
 4. Render the Quarto document linkedin-wrapped.qmd in the [docs](bydata/linkedin-wrapped/tree/main/docs) folder. The YAML header contains two parameters that control whether you scrape the reactions data for your posts from LinkedIn from the Quarto document (`scrape_reactions: true`) and for which year you want to create the report, e.g. `year: 2024`.
 
-<object data="https://github.com/bydata/linkedin-wrapped/blob/main/docs/linkedin-wrapped.pdf" type="application/pdf" width="600px" height="600px">
-    <embed src="https://github.com/bydata/linkedin-wrapped/blob/main/docs/linkedin-wrapped.pdf">
-        <p>This browser does not support PDFs. Please download the PDF to view it: <a href="https://github.com/bydata/linkedin-wrapped/blob/main/docs/linkedin-wrapped.pdf">Download PDF</a>.</p>
-    </embed>
-</object>
+<embed src="https://raw.githubusercontent.com/bydata/linkedin-wrapped/refs/heads/main/docs/linkedin-wrapped.pdf" type="application/pdf"/>
+
 
