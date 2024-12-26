@@ -1,0 +1,218 @@
+---
+params:
+  username: Ansgar Wolsing
+execute:
+  echo: false
+  message: false
+  warning: false
+format: 
+  pdf:
+    geometry: 
+      - paperwidth=8in
+      - paperheight=8in
+      - top=25mm
+      - left=20mm
+      - right=20mm
+      - bottom=5mm
+    mainfont: Roboto
+    keep-tex: true
+    include-in-header:
+      - "template.tex"
+header-includes:
+  - \usepackage{xcolor}
+  - \usepackage{tcolorbox}
+  - \usepackage{multicol} 
+  - \setlength{\columnsep}{1cm}
+editor: visual
+---
+
+\begin{center}
+\fontsize{32}{6}\selectfont\textbf{2024}
+\end{center}
+\begin{center}
+\fontsize{24}{6}\selectfont LinkedIn Wrapped
+\end{center}
+
+
+```{r setup}
+library(tidyverse)
+library(magick)
+
+bgcolor <- "#11052F"
+
+```
+
+```{r profile-pic-prep, include=FALSE}
+# Crop the image with {magick} and insert it as PNG
+
+paths_complete_export_zip <- list.files(file.path("..", "data"), pattern = "Complete_LinkedInDataExport_.+\\.zip")
+path_complete_export <- file.path("..", "data", "complete_data")
+unzip(file.path("..", "data", paths_complete_export_zip[1]), exdir = path_complete_export, 
+      files = c("Rich_Media.csv"))
+
+df_richmedia <- read_csv(file.path(path_complete_export, "Rich_Media.csv"),
+                         name_repair = janitor::make_clean_names)
+profile_photo_url <- df_richmedia |> 
+  filter(str_detect(date_time, "profile photo"), str_detect(media_link, "profile-originalphoto")) |> 
+  slice_head(n = 1) |> 
+  pull(media_link)
+
+# Read the profile image and crop it to a square
+profile_photo_path <- file.path("media", "profile-photo.jpeg")
+# img <- image_read(file.path("media", "1547825749803.jpeg")) 
+download.file(profile_photo_url, destfile = profile_photo_path)
+img <- image_read(profile_photo_path) 
+ii <- image_info(img)
+ii_min <- min(ii$width, ii$height)
+img <- image_crop(img, geometry = paste0(ii_min, "x", ii_min, "+0+0"), repage = TRUE)  
+
+# Create a circular mask
+mask <- image_blank(width = ii_min,  height = ii_min, color = "none")
+
+mask <- image_draw(mask)
+graphics::symbols(x = ii_min / 2, 
+                  y = ii_min / 2, 
+                  circles = ii_min / 2, 
+                  inches = FALSE, 
+                  add = TRUE, 
+                  bg = "black") 
+dev.off()
+
+# Apply the mask
+img_circular <- image_composite(img, mask, operator = "copyopacity") |> 
+  image_background(bgcolor) |> 
+  image_resize("500x500")
+image_write(img_circular, "profile-pic-circle.png")
+
+```
+
+
+![](profile-pic-circle.png){fig-align="left"}
+
+```{r}
+username <- params$username
+```
+
+\begin{center}
+`{r} username`
+\end{center}
+
+\vspace{-15mm}
+
+```{r}
+#' Run R/01-scrape-reactions.R first to create the post stats dataset
+
+df_post_stats <- read_csv(file.path("..", "data", "post-stats.csv"))
+df_post_stats <- df_post_stats |> 
+  mutate(
+    datetime = date,
+    date = as_date(date),
+    month = month(date, label = TRUE)
+  ) |> 
+  select(datetime, date, everything())
+
+```
+
+```{r, fig.align='center', fig.width=6, fig.height=3, fig.retina=TRUE, fig.dpi=200}
+# Calendar of post dates
+df_calendar_plot <- df_post_stats |> 
+  transmute(
+    date = as_date(date)
+  ) |> 
+  group_by(date) |> 
+  summarize(n_posts = n()) |> 
+  complete(
+    date = seq(as_date("2024-01-01"), as_date("2024-12-31"), "1 day"),
+    fill = list(n_posts = 0)) |> 
+  mutate(
+    week = isoweek(date),
+    week_start_date = floor_date(date, "1 week", week_start = 1),
+    week_start_date = as_date(week_start_date),
+    week_start_month_num = month(week_start_date),
+    week_start_month = month(week_start_date, label = TRUE),
+    weekday_num = wday(date, label = FALSE, week_start = 1),
+    weekday = wday(date, label = TRUE, week_start = 1),
+    week = ifelse(week == 1 & week_start_month_num == 12, 53, week)
+  ) |> 
+  arrange(date)
+
+# Find the week nums for the month labels
+df_first_week_of_month <- df_calendar_plot |> 
+  group_by(week_start_month) |> 
+  summarize(first_week_of_month = min(week))
+first_week_of_month <- df_first_week_of_month$first_week_of_month
+names(first_week_of_month) <- df_first_week_of_month$week_start_month
+
+df_calendar_plot |> 
+  ggplot(aes(week, weekday_num)) +
+  geom_tile(
+    aes(fill = n_posts),
+    height = 0.8, width = 0.8) +
+  scale_x_continuous(
+    breaks = first_week_of_month,
+    expand = c(0, 0)
+  ) +
+  scale_y_reverse(
+    expand = c(0, 0), breaks = 1:7, labels = unique(df_calendar_plot$weekday)) +
+  scale_fill_viridis_c(option = "plasma", na.value = "grey80") +
+  coord_fixed() +
+  guides(fill = guide_legend(
+    title = "# of posts", 
+    override.aes = list(shape = 22, color = "white", size = 1))) +
+  theme_minimal() +
+  theme(
+    plot.background = element_rect(color = "transparent", fill = "transparent"),
+    panel.grid = element_blank(),
+    text = element_text(color = "white"),
+    axis.text = element_text(color = "white"),
+    axis.text.x = element_text(size = 7),
+    axis.text.y = element_text(hjust = 0, size = 5),
+    axis.title = element_blank(),
+    legend.position = "bottom",
+    legend.justification = "right",
+    legend.title = element_text(size = 7),
+    legend.text = element_text(size = 7),
+    legend.key.width = unit(2, "mm"),
+    legend.key.height = unit(2, "mm")
+  )
+
+```
+
+
+\vspace{-15mm}
+
+```{r main-post-stats}
+
+format_number <- function(x) {
+  scales::number(x)
+}
+
+# Number of posts
+n_posts <- nrow(df_post_stats)
+# Number of reactions
+n_total_reactions <- sum(df_post_stats$reactions)
+# Number of comments
+n_total_comments <- sum(df_post_stats$comments)
+
+bgcolor_latex <- sprintf("{HTML}{%s}", str_remove(bgcolor, "#"))
+
+
+```
+
+
+\newcommand{\transparentcard}[2]{
+  \begin{tcolorbox}[colback=bgcolor, coltext=white, colframe=cardframecolor, 
+  width=0.3\textwidth, height=3.5cm, valign=center, halign=center, boxrule=1pt]
+    \Huge\textbf{#1} \\ % Large number
+    \vspace{0.5cm}
+    \large #2 % Label
+  \end{tcolorbox}
+}
+
+\begin{center}
+\begin{tabular}{ccc} % Create a table with 3 columns for horizontal alignment
+  \transparentcard{`{r} format_number(n_posts)`}{Posts} &
+  \transparentcard{`{r} format_number(n_total_reactions)`}{Reactions} &
+  \transparentcard{`{r} format_number(n_total_comments)`}{Comments} \\
+\end{tabular}
+\end{center}
