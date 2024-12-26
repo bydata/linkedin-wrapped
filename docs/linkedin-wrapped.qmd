@@ -42,13 +42,15 @@ library(magick)
 library(ggtext)
 
 bgcolor <- "#11052F"
+fill_gradient_yellow <- grid::linearGradient(c("#FAC123", "#FFD96E"), group = FALSE)
+fill_gradient_pink <- grid::linearGradient(c("#A313A8", "#DD00E5"), group = FALSE)
 
 # Custom plot theme
 custom_theme <- function(...) {
   theme_minimal() +
   theme(
     plot.background = element_rect(color = "#38216B", fill = "#18083E"),
-    plot.margin = margin(t = 8, l = 8, r = 8, b = 8),
+    plot.margin = margin(t = 12, l = 8, r = 8, b = 8),
     panel.grid = element_blank(),
     panel.grid.major.y = element_line(color = "#38216B"),
     text = element_text(color = "white"),
@@ -58,6 +60,8 @@ custom_theme <- function(...) {
     ...
   )  
 }
+
+default_bar_width <- 0.82
 
 ```
 
@@ -108,6 +112,8 @@ image_write(img_circular, "profile-pic-circle.png")
 
 ![](profile-pic-circle.png){fig-align="left"}
 
+\vspace{-10mm}
+
 ```{r}
 username <- params$username
 ```
@@ -116,7 +122,7 @@ username <- params$username
 `{r} username`
 \end{center}
 
-\vspace{-25mm}
+\vspace{-15mm}
 
 ```{r load-post-stats, cache=TRUE}
 #' Run R/01-scrape-reactions.R first to create the post stats dataset
@@ -458,7 +464,7 @@ df_post_stats |>
   group_by(month) |> 
   summarize(n_posts = n()) |> 
   ggplot(aes(month, n_posts)) +
-  geom_col(fill = "#FFD96E") +
+  geom_col(fill = fill_gradient_yellow, width = default_bar_width) +
   labs(
     title = "Number of posts by month",
     x = NULL, y = NULL
@@ -474,7 +480,7 @@ df_post_stats |>
   group_by(month) |> 
   summarize(n_engagements = sum(reactions) + sum(comments)) |> 
   ggplot(aes(month, n_engagements)) +
-  geom_col(fill = "#DD00E5") +
+  geom_col(fill = fill_gradient_pink, width = default_bar_width) +
   labs(
     title = "Number of engagements by month",
     subtitle = "Reactions and comments",
@@ -501,7 +507,7 @@ df_post_stats |>
   group_by(hour) |> 
   summarize(n_posts = n()) |> 
   ggplot(aes(hour, n_posts)) +
-  geom_col(fill = "#FFD96E") +
+  geom_col(fill = fill_gradient_yellow, width = default_bar_width) +
   scale_x_continuous(breaks = seq(0, 24, 2)) +
   coord_cartesian(xlim = c(0, 23)) +
   labs(
@@ -521,7 +527,7 @@ df_post_stats |>
   group_by(hour) |> 
   summarize(avg_engagements = mean(reactions) + mean(comments)) |> 
   ggplot(aes(hour, avg_engagements)) +
-  geom_col(fill = "#DD00E5") +
+  geom_col(fill = fill_gradient_pink, width = default_bar_width) +
   scale_x_continuous(breaks = seq(0, 24, 2)) +
   coord_cartesian(xlim = c(0, 23)) +
   labs(
@@ -549,7 +555,7 @@ df_post_stats |>
   group_by(wday) |> 
   summarize(n_posts = n()) |> 
   ggplot(aes(wday, n_posts)) +
-  geom_col(fill = "#FFD96E") +
+  geom_col(fill = fill_gradient_yellow, width = default_bar_width) +
   labs(
     title = "Number of posts by day of week",
     x = NULL, y = NULL
@@ -566,7 +572,7 @@ df_post_stats |>
   group_by(wday) |> 
   summarize(avg_engagements = mean(reactions) + mean(comments)) |> 
   ggplot(aes(wday, avg_engagements)) +
-  geom_col(fill = "#DD00E5") +
+  geom_col(fill = fill_gradient_pink, width = default_bar_width) +
   labs(
     title = "Average engagements per post by day of week of posting",
     subtitle = "Reactions and comments",
