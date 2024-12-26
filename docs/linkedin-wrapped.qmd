@@ -622,7 +622,7 @@ df_post_stats |>
 Created with R and Quarto.
 \end{center}
 \begin{center}
-\href{https://github.com/bydata/linkedin-wrapped}{github.com/bydata/linkedin-wrapped} 
+\href{https://github.com/bydata/linkedin-wrapped}{\color{linktextcolor}{github.com/bydata/linkedin-wrapped}}
 \end{center}
 
 \begin{center}
