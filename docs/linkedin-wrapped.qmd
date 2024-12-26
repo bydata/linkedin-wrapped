@@ -43,6 +43,21 @@ library(ggtext)
 
 bgcolor <- "#11052F"
 
+# Custom plot theme
+custom_theme <- function(...) {
+  theme_minimal() +
+  theme(
+    plot.background = element_rect(color = "#38216B", fill = "#18083E"),
+    panel.grid = element_blank(),
+    panel.grid.major.y = element_line(color = "#38216B"),
+    text = element_text(color = "white"),
+    axis.text = element_text(color = "white"),
+    plot.title = element_text(face = "bold"),
+    plot.title.position = "plot",
+    ...
+  )  
+}
+
 ```
 
 ```{r profile-pic-prep, include=FALSE, cache=TRUE}
@@ -226,7 +241,7 @@ bgcolor_latex <- sprintf("{HTML}{%s}", str_remove(bgcolor, "#"))
 \newpage
 
 \begin{center}
-\fontsize{24}{6}\selectfont Your top posts in 2024
+\fontsize{24}{6}\selectfont\textbf{Your top posts in 2024}
 \end{center}
 \vspace{-10mm}
 \begin{center}
@@ -283,7 +298,7 @@ df_post_stats |>
 \newpage
 
 \begin{center}
-\fontsize{24}{6}\selectfont Your top posts in 2024 per month
+\fontsize{24}{6}\selectfont\textbf{Your top posts in 2024 per month}
 \end{center}
 \vspace{-10mm}
 \begin{center}
@@ -334,4 +349,42 @@ df_post_stats |>
 ```
 
 
+\newpage
 
+\begin{center}
+\fontsize{24}{6}\selectfont\textbf{Your consistency stats}
+\end{center}
+
+\vspace{10mm}
+
+
+```{r posts-per-month, fig.height=2.5, fig.align='center'}
+df_post_stats |> 
+  group_by(month) |> 
+  summarize(n_posts = n()) |> 
+  ggplot(aes(month, n_posts)) +
+  geom_col(fill = "#FFD96E") +
+  labs(
+    title = "Number of posts by month",
+    x = NULL, y = NULL
+  ) +
+  custom_theme()  
+
+```
+
+\vspace{4mm}
+
+```{r posts-engagements-per-month, fig.height=2.5, fig.align='center'}
+df_post_stats |> 
+  group_by(month) |> 
+  summarize(n_engagements = sum(reactions) + sum(comments)) |> 
+  ggplot(aes(month, n_engagements)) +
+  geom_col(fill = "#DD00E5") +
+  labs(
+    title = "Number of engagements by month",
+    subtitle = "Reactions and comments",
+    x = NULL, y = NULL
+  ) +
+  custom_theme()
+
+```
