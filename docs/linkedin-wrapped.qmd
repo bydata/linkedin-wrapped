@@ -548,15 +548,17 @@ df_post_stats |>
 
 ```{r posts-engagements-per-hour, fig.height=2.5, fig.align='center'}
 df_post_stats |> 
-  mutate(hour = hour(datetime)) |> 
+  mutate(
+    hour = hour(datetime),
+    engagements = reactions + comments) |> 
   group_by(hour) |> 
-  summarize(avg_engagements = mean(reactions) + mean(comments)) |> 
-  ggplot(aes(hour, avg_engagements)) +
+  summarize(median_engagements = median(engagements)) |> 
+  ggplot(aes(hour, median_engagements)) +
   geom_col(fill = fill_gradient_pink, width = default_bar_width) +
   scale_x_continuous(breaks = seq(0, 23, 2)) +
   coord_cartesian(xlim = c(0, 23)) +
   labs(
-    title = "Average engagements per post by hour of posting",
+    title = "Median engagements per post by hour of posting",
     subtitle = "Reactions and comments, time in UTC",
     x = NULL, y = NULL
   ) +
@@ -593,13 +595,15 @@ df_post_stats |>
 
 ```{r posts-engagements-per-day-of-week, fig.height=2.5, fig.align='center'}
 df_post_stats |> 
-   mutate(wday = wday(date, label = TRUE, week_start = 1)) |> 
+  mutate(
+    wday = wday(date, label = TRUE, week_start = 1),
+    engagements = reactions + comments) |> 
   group_by(wday) |> 
-  summarize(avg_engagements = mean(reactions) + mean(comments)) |> 
-  ggplot(aes(wday, avg_engagements)) +
+  summarize(median_engagements = median(engagements)) |> 
+  ggplot(aes(wday, median_engagements)) +
   geom_col(fill = fill_gradient_pink, width = default_bar_width) +
   labs(
-    title = "Average engagements per post by day of week of posting",
+    title = "Median engagements per post by day of week of posting",
     subtitle = "Reactions and comments",
     x = NULL, y = NULL
   ) +
