@@ -9,7 +9,7 @@ df_post_stats <- df_post_stats |>
     date = as_date(date),
     month = month(date, label = TRUE)
   ) |> 
-  select( datetime, date, everything())
+  select(datetime, date, everything())
 
 # Number of posts
 (n_posts <- nrow(df_post_stats))
@@ -23,7 +23,7 @@ df_post_stats <- df_post_stats |>
 # Top posts by number of reactions
 df_post_stats |> 
   slice_max(order_by = reactions, n = 3) |> 
-  select(Date, ShareCommentary, reactions, comments)
+  select(date, share_commentary, reactions, comments)
 
 # Calendar of post dates
 df_calendar_plot <- df_post_stats |> 
